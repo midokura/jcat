@@ -18,18 +18,30 @@ def pretty_json(json_text: str) -> str:
         print(pfmt)
     highlight(pfmt, PythonLexer(), TerminalFormatter(bg='dark'), outfile=sys.stdout)
 
+def read_stdin():
+    pretty_json(json.loads(sys.stdin.read()))
+
 if __name__ == '__main__':
     if sys.stdout.isatty():
         pprint_size = os.get_terminal_size().columns
+#    sys.stdin.reconfigure(encoding='utf-8')
 
     parser = argparse.ArgumentParser(
         description='Prints pretty-formatted JSON files'
     )
-    parser.add_argument('files', help="JSON file(s) to print", nargs='+')
+    parser.add_argument('files',
+                        help="JSON file(s) to print, leave empty or use \"-\" to read from stdin",
+                        nargs='*')
     args = parser.parse_args()
     for filepath in args.files:
+        if filepath == '-':
+            continue
         if not os.path.isfile(filepath):
             raise ValueError(f'Not a file: {filepath}')
     for filepath in args.files:
+        if filepath == '-':
+            read_stdin()
         with open(filepath) as f:
             pretty_json(json.load(f))
+    if not args.files:
+        read_stdin()
